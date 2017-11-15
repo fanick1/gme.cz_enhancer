@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         GMEnhancer
 // @namespace    http://tampermonkey.net/
-// @version      0.1
-// @description  try to take over the world!
-// @author       You
+// @version      0.3
+// @description  GMEnhancer
+// @author       fanick1@users.noreply.github.com
 // @match        https://www.gme.cz/*
 // @grant        GM_xmlhttpRequest
 // @connect      self
@@ -19,15 +19,11 @@
 
     var storeInfoNodes = Array.from(document.getElementsByClassName('store-info'));
    // debugger;
-    try{
-    for(let node of storeInfoNodes){
-        var link = node.children[0].dataset.modalUrl;                                
-        if(!link){
-            console.debug('TamperMonkey script GME Skladem Brno - issue with link on node', node);
+    var godStruct = {ids:[]};
+    godStruct = storeInfoNodes.reduce( (obj,node) =>{ var id = node.children[0].dataset.modalUrl.split('?id_product=')[1]; obj[id]={id:id, node: node}; obj.ids.push(id); return obj;}, godStruct);
 
-            break;
-        }
-       // GM_xmlhttpRequest({
+    try{
+       var link = "https://gme.emfire.cz/products?ids[]=" + godStruct.ids.join('&ids[]=');
         AJAX({
             headers:{
                 accept: 'application/json'
@@ -36,22 +32,20 @@
             url:link,
             timeout:30000,
             onload: function(a1, a2, a3, a4){
-                var resultScratch = document.createElement('span');
-                resultScratch.innerHTML = a1.response;                
-                var stores = Array.from(resultScratch.getElementsByClassName('store'));
-                
-                var Brno = stores.find(function(element, index, array){
-                    return element.getElementsByClassName('info')[0].textContent.indexOf('Brno') !== -1;
+
+                var responseArray = JSON.parse(a1.response);
+                responseArray.forEach( (product) => {
+                    var z = document.createElement('span');
+                    z.classList.toggle('container');
+                    // TODO Add picker for selecting the store
+                    var Brno = product.StoreAvailability.find( (store) => store.Store.Name == "MO prodejna Brno" ); 
+                    var avail = Brno.Available;
+                    var ks = Brno.Amount;
+                    avail = avail ? 'Skladem ' + ks + ' ks': ' Není ';
+                    z.textContent = avail;
+                    var node = godStruct[product.Id].node;
+                    node.appendChild(z);
                 });
-       //         debugger;
-                var z = document.createElement('span');
-                z.classList.toggle('container');
-                var avail = Brno.children[1].children[0];
-                var ks = Brno.children[1].children[1];
-                avail = avail ? avail.textContent : ' '; 
-                ks = ks ? ks.textContent : ' ';
-                z.textContent = avail + ks;
-                node.appendChild(z);
             },
             onerror: function(a1, a2, a3, a4){
                 console.error('Loading error', node, link, a1, a2, a3, a4);
@@ -60,7 +54,6 @@
                 console.error('Loading timeout', node, link, a1, a2, a3, a4);
             },
         });
-    }
     }catch(e){
         console.error(e);
     }
