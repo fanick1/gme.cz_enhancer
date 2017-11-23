@@ -2,6 +2,8 @@
 // @name         GMEnhancer
 // @namespace    http://tampermonkey.net/
 // @version      0.3
+// @updateURL    https://raw.githubusercontent.com/fanick1/gme.cz_enhancer/master/gmenhancer.js
+// @downloadURL  https://raw.githubusercontent.com/fanick1/gme.cz_enhancer/master/gmenhancer.js
 // @description  GMEnhancer
 // @author       fanick1@users.noreply.github.com
 // @match        https://www.gme.cz/*
